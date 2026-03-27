@@ -1,5 +1,44 @@
 # 更新日志
 
+## [2.0.1] - 2026-03-28
+
+### 🐛 Bug修复 - 调度器WebSocket协议错误
+
+#### 问题描述
+- 后端调度器执行任务时返回 `Server error code -1`（协议级错误）
+- 前端"立即执行"功能正常，但后端调度器无法正常工作
+- 同一token在前端正常，后端失败
+
+#### 根本原因
+1. **seq必须从1开始**: 服务器会忽略seq=0的包，`this.seq = 0` 导致第一条命令被忽略
+2. **双重编码问题**: `send()`/`sendWithPromise()` 先对body进行BON编码，然后又让 `protocol.encode()` 再次编码，导致body被错误处理
+3. **heartbeat双重编码**: `_startHeartbeat()` 同样存在双重编码问题
+4. **响应匹配字段错误**: 使用 `packet.ack` 而非 `packet.resp` 匹配pending promises
+5. **非base64字符串误判**: `tokenParser.js` 将非base64字符串（如包含中文的token）当作base64解码，产生乱码
+
+#### 修复内容
+- **wsClient.js**:
+  - `seq` 从1开始 (`this.seq = 1`)
+  - `body: params` 改为直接传原始对象，让 `protocol.encode()` 统一处理编码
+  - `_sys/ack` heartbeat同样使用 `body: {}`
+  - 响应匹配改用 `packet.resp` 而非 `packet.ack`
+  - 支持 `ws://` 和 `wss://` 两种协议（通过环境判断）
+- **tokenParser.js**:
+  - 增加base64格式验证 (`/^[A-Za-z0-9+/=]+$/`)
+  - JSON格式token直接解析，不尝试base64解码
+  - 返回 `roleToken`/`gameToken`/`token` 字段的实际值，而非整个JSON对象
+- **executor.js**:
+  - 更新 `clientVersion` 到最新版本 `2.20.1-e249aa927a8ffe4c-wx`
+
+#### 错误码说明
+| 错误码 | 含义 | 说明 |
+|--------|------|------|
+| -1 | 协议级错误 | 服务器无法解析请求，协议格式错误 |
+| 200020 | 游戏业务错误 | 服务器理解请求但游戏逻辑拒绝（如奖励已领取） |
+| 2000150 | 游戏业务错误 | 游戏业务逻辑拒绝（如条件不满足） |
+
+---
+
 ## [2.0.0] - 2024-01-20
 
 ### 🎉 重大更新 - Token管理系统重构

@@ -164,7 +164,7 @@ async function runDailyBatch(client, settings, log) {
   await cmd(
     'role_getroleinfo',
     {
-      clientVersion: '2.10.3-f10a39eaa0c409f4-wx',
+      clientVersion: '2.20.1-e249aa927a8ffe4c-wx',
       inviteUid: 0,
       platform: 'hortor',
       platformExt: 'mix',

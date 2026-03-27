@@ -3,7 +3,7 @@
 const WebSocket = require('ws');
 const protocol = require('./protocol');
 
-const GAME_WS_HOST = 'xxz-xyzw.hortorgames.com';
+const GAME_WS_HOST = '172.18.0.3';
 
 class GameClient {
   constructor(actualToken, options = {}) {
@@ -13,7 +13,7 @@ class GameClient {
     this.ws = null;
     this.connected = false;
     this.ack = 0;
-    this.seq = 0;
+    this.seq = 1; // Must start at 1; server silently drops seq=0 packets
     this.promises = {}; // seq -> { resolve, reject, timer }
     this.enc = protocol.getEnc('x');
     this.autoEnc = protocol.getEnc('auto'); // passthrough for incoming
@@ -27,7 +27,10 @@ class GameClient {
    */
   connect() {
     return new Promise((resolve, reject) => {
-      const url = `wss://${GAME_WS_HOST}/agent?p=${encodeURIComponent(this.actualToken)}&e=x&lang=chinese`;
+      const isProxy = (GAME_WS_HOST === '172.18.0.3');
+      const url = isProxy
+        ? `ws://${GAME_WS_HOST}/ws-proxy/agent?p=${encodeURIComponent(this.actualToken)}&e=x&lang=chinese`
+        : `wss://${GAME_WS_HOST}/agent?p=${encodeURIComponent(this.actualToken)}&e=x&lang=chinese`;
 
       let settled = false;
       const settle = (err) => {
@@ -106,13 +109,14 @@ class GameClient {
       return;
     }
     try {
-      const bodyBytes = protocol.bon.encode(params, false);
+      // Pass raw params to protocol.encode - it will BON-encode automatically
+      // Do NOT pre-encode bodyBytes, as protocol.encode will re-encode them
       const packet = {
         cmd,
         ack: this.ack,
         seq: this.seq++,
         time: Date.now(),
-        body: bodyBytes,
+        body: params,
       };
       const encoded = protocol.encode(packet, this.enc);
       this.ws.send(Buffer.from(encoded));
@@ -133,19 +137,14 @@ class GameClient {
 
       const seq = this.seq;
 
-      let bodyBytes;
-      try {
-        bodyBytes = protocol.bon.encode(params, false);
-      } catch (err) {
-        return reject(new Error(`Failed to encode params for "${cmd}": ${err.message}`));
-      }
-
+      // Pass raw params to protocol.encode - it will BON-encode the body automatically
+      // Do NOT pre-encode bodyBytes, as protocol.encode will re-encode them
       const packet = {
         cmd,
         ack: this.ack,
         seq: this.seq++,
         time: Date.now(),
-        body: bodyBytes,
+        body: params,
       };
 
       let encoded;
@@ -193,14 +192,14 @@ class GameClient {
       }
 
       // Try to match a pending promise by the server's ack field
-      const serverAck = packet.ack;
-      if (serverAck !== undefined && serverAck !== null && this.promises[serverAck]) {
-        const pending = this.promises[serverAck];
+      const serverResp = packet.resp;
+      if (serverResp !== undefined && serverResp !== null && this.promises[serverResp]) {
+        const pending = this.promises[serverResp];
         clearTimeout(pending.timer);
-        delete this.promises[serverAck];
+        delete this.promises[serverResp];
 
         if (packet.code !== undefined && packet.code !== 0) {
-          pending.reject(new Error(`Server error code ${packet.code} for ack=${serverAck}`));
+          pending.reject(new Error(`Server error code ${packet.code} for resp=${serverResp}`));
           return;
         }
 
@@ -244,6 +243,8 @@ class GameClient {
         return;
       }
       try {
+        // Pass raw body to protocol.encode - it will BON-encode automatically
+        // Do NOT pre-encode body, as protocol.encode will re-encode it
         const heartbeat = {
           cmd: '_sys/ack',
           ack: this.ack,
@@ -251,9 +252,6 @@ class GameClient {
           time: Date.now(),
           body: {},
         };
-        // Encode body
-        const bodyBytes = protocol.bon.encode({}, false);
-        heartbeat.body = bodyBytes;
         const encoded = protocol.encode(heartbeat, this.enc);
         this.ws.send(Buffer.from(encoded));
       } catch (err) {
