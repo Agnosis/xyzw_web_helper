@@ -21,7 +21,7 @@ echo "[1/4] Building and pushing frontend image..."
 sh deploy/docker/deploy.sh push
 
 echo "[2/4] Building and pushing backend image..."
-docker build -t xyzw_auth_backend:latest ./backend
+docker build -t xyzw_auth_backend:latest -f "$SCRIPT_DIR/../../backend/Dockerfile" "$SCRIPT_DIR/../../backend"
 docker tag xyzw_auth_backend:latest "$BACKEND_IMAGE"
 docker push "$BACKEND_IMAGE"
 
