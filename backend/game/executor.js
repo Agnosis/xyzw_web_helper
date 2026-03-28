@@ -136,6 +136,167 @@ async function runTask(taskName, client, settings, log) {
       await runDailyBatch(client, settings, log);
       break;
 
+    // === 爬塔类 ===
+    case 'climbTower':
+      log('一键爬塔...');
+      await cmd('tower_getinfo', {}, '获取爬塔信息');
+      await cmd('fight_starttower', {}, '开始爬塔');
+      log('爬塔完成', 'success');
+      break;
+
+    case 'climbWeirdTower':
+      log('一键爬怪异塔...');
+      await cmd('evotower_getinfo', {}, '获取怪异塔信息');
+      await cmd('evotower_readyfight', {}, '准备战斗');
+      await cmd('evotower_fight', { battleNum: 1, winNum: 1 }, '怪异塔战斗');
+      log('怪异塔完成', 'success');
+      break;
+
+    case 'batchClaimFreeEnergy':
+      log('领取怪异塔免费道具...');
+      await cmd('mergebox_getinfo', { actType: 1 }, '获取道具信息');
+      await cmd('mergebox_claimfreeenergy', { actType: 1 }, '领取免费道具');
+      log('免费道具领取完成', 'success');
+      break;
+
+    case 'skinChallenge':
+      log('换皮闯关...');
+      await cmd('towers_getinfo', {}, '获取活动信息');
+      await cmd('towers_start', { towerType: 1 }, '开始挑战');
+      await cmd('towers_fight', { towerType: 1 }, '换皮战斗');
+      log('换皮闯关完成', 'success');
+      break;
+
+    // === 商店类 ===
+    case 'legion_storebuygoods':
+      log('一键购买四圣碎片...');
+      await cmd('legion_storebuygoods', { id: 6 }, '购买四圣碎片');
+      log('四圣碎片购买完成', 'success');
+      break;
+
+    case 'store_purchase':
+      log('黑市采购...');
+      await cmd('store_purchase', {}, '黑市采购');
+      log('黑市采购完成', 'success');
+      break;
+
+    // === 竞技场类 ===
+    case 'batcharenafight':
+      log('一键竞技场战斗...');
+      await cmd('arena_startarea', {}, '开始竞技场');
+      await cmd('fight_startareaarena', { targetId: 0 }, '竞技场战斗');
+      log('竞技场战斗完成', 'success');
+      break;
+
+    // === 宝库梦境类 ===
+    case 'batchbaoku13':
+      log('一键宝库前3层...');
+      await cmd('bosstower_getinfo', {}, '获取宝库信息');
+      await cmd('bosstower_startboss', {}, '宝库BOSS');
+      await cmd('bosstower_startbox', {}, '宝库开箱');
+      log('宝库前3层完成', 'success');
+      break;
+
+    case 'batchbaoku45':
+      log('一键宝库4,5层...');
+      await cmd('bosstower_getinfo', {}, '获取宝库信息');
+      await cmd('bosstower_startboss', {}, '宝库BOSS');
+      log('宝库4,5层完成', 'success');
+      break;
+
+    case 'batchmengjing':
+      log('一键梦境...');
+      await cmd('dungeon_selecthero', { battleTeam: { 0: 107 } }, '选择梦境阵容');
+      log('梦境完成', 'success');
+      break;
+
+    // === 开箱钓鱼招募类 ===
+    case 'batchOpenBox':
+      log('批量开箱...');
+      await cmd('item_openbox', { itemId: 2001, number: 10 }, '开箱');
+      await cmd('item_batchclaimboxpointreward', {}, '领取宝箱积分');
+      log('开箱完成', 'success');
+      break;
+
+    case 'batchOpenBoxByPoints':
+      log('按积分开箱...');
+      await cmd('item_openbox', { itemId: 2001, number: 10 }, '开箱');
+      log('按积分开箱完成', 'success');
+      break;
+
+    case 'batchClaimBoxPointReward':
+      log('领取宝箱积分...');
+      await cmd('item_batchclaimboxpointreward', {}, '领取宝箱积分');
+      log('宝箱积分领取完成', 'success');
+      break;
+
+    case 'batchFish':
+      log('批量钓鱼...');
+      await cmd('artifact_lottery', { type: 1, lotteryNumber: 10, newFree: true }, '钓鱼');
+      await cmd('artifact_exchange', {}, '领取累计奖励');
+      log('钓鱼完成', 'success');
+      break;
+
+    case 'batchRecruit':
+      log('批量招募...');
+      await cmd('hero_recruit', { recruitType: 1, recruitNumber: 10 }, '招募');
+      log('招募完成', 'success');
+      break;
+
+    // === 灯神扫荡 ===
+    case 'batchGenieSweep':
+      log('灯神扫荡...');
+      await cmd('genie_sweep', { genieId: 1, sweepCnt: 1 }, '灯神扫荡');
+      log('灯神扫荡完成', 'success');
+      break;
+
+    // === 蟠桃园 ===
+    case 'batchClaimPeachTasks':
+      log('领取蟠桃园任务...');
+      await cmd('legion_getpayloadtask', {}, '获取蟠桃任务');
+      await cmd('legion_claimpayloadtask', { taskId: 1 }, '领取任务奖励');
+      log('蟠桃园任务完成', 'success');
+      break;
+
+    // === 车辆类 ===
+    case 'batchClaimCars':
+      log('一键收车...');
+      await cmd('car_getrolecar', {}, '获取车辆信息');
+      await cmd('car_claim', { carId: '0' }, '收车');
+      log('收车完成', 'success');
+      break;
+
+    case 'batchSmartSendCar':
+      log('智能发车...');
+      await cmd('car_getrolecar', {}, '获取车辆信息');
+      await cmd('car_send', { carId: '0', helperId: 0, text: '', isUpgrade: false }, '发车');
+      log('智能发车完成', 'success');
+      break;
+
+    // === 道具合成类 ===
+    case 'batchUseItems':
+      log('使用道具...');
+      await cmd('mergebox_getinfo', { actType: 1 }, '获取道具信息');
+      await cmd('mergebox_openbox', { actType: 1, pos: { gridX: 4, gridY: 5 } }, '使用道具');
+      await cmd('mergebox_claimcostprogress', { actType: 1 }, '领取累计奖励');
+      log('使用道具完成', 'success');
+      break;
+
+    case 'batchMergeItems':
+      log('一键合成...');
+      await cmd('mergebox_getinfo', { actType: 1 }, '获取合成信息');
+      await cmd('mergebox_claimmergeprogress', { actType: 1, taskId: 1 }, '领取合成奖励');
+      await cmd('mergebox_automergeitem', { actType: 1 }, '自动合成');
+      log('一键合成完成', 'success');
+      break;
+
+    // === 功法赠送 ===
+    case 'batchLegacyGiftSendEnhanced':
+      log('批量赠送功法残卷...');
+      await cmd('legacy_sendgift', { itemCnt: 1, legacyUIds: [] }, '赠送功法');
+      log('功法赠送完成', 'success');
+      break;
+
     default:
       log(`未知任务: ${taskName}`, 'warning');
   }
